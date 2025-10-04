@@ -95,37 +95,50 @@ if (-not $fontInstalled) {
 }
 
 Write-Host ""
-Write-Host "Step 5: Setting up PowerShell profile..." -ForegroundColor Yellow
+Write-Host "Step 5: Setting up PowerShell profiles..." -ForegroundColor Yellow
 
-# Determine the profile path for PowerShell 7
-$profileDir = Split-Path -Parent $PROFILE
-if (-not (Test-Path $profileDir)) {
-    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-}
-
-# Copy the profile
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Copy-Item -Path "$scriptDir\Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
-Write-Host "PowerShell profile installed!" -ForegroundColor Green
+
+# Install profile for PowerShell 7
+$pwsh7ProfileDir = "$env:USERPROFILE\Documents\PowerShell"
+if (-not (Test-Path $pwsh7ProfileDir)) {
+    New-Item -ItemType Directory -Path $pwsh7ProfileDir -Force | Out-Null
+}
+Copy-Item -Path "$scriptDir\Microsoft.PowerShell_profile.ps1" -Destination "$pwsh7ProfileDir\Microsoft.PowerShell_profile.ps1" -Force
+Write-Host "PowerShell 7 profile installed!" -ForegroundColor Green
+
+# Install profile for Windows PowerShell (optional, for compatibility)
+$winPSProfileDir = "$env:USERPROFILE\Documents\WindowsPowerShell"
+if (-not (Test-Path $winPSProfileDir)) {
+    New-Item -ItemType Directory -Path $winPSProfileDir -Force | Out-Null
+}
+Copy-Item -Path "$scriptDir\Microsoft.PowerShell_profile.ps1" -Destination "$winPSProfileDir\Microsoft.PowerShell_profile.ps1" -Force
+Write-Host "Windows PowerShell profile installed!" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "Step 6: Installing custom Oh My Posh theme..." -ForegroundColor Yellow
+Write-Host "Step 6: Downloading and installing Oh My Posh themes..." -ForegroundColor Yellow
 
-# Find Oh My Posh themes directory
-$ohMyPoshPath = (Get-Command oh-my-posh -ErrorAction SilentlyContinue).Source
-if ($ohMyPoshPath) {
-    $themesPath = Join-Path (Split-Path -Parent (Split-Path -Parent $ohMyPoshPath)) "themes"
-    
-    if (Test-Path $themesPath) {
-        Copy-Item -Path "$scriptDir\1_shell_blue_green.omp.json" -Destination $themesPath -Force
-        Write-Host "Custom theme installed!" -ForegroundColor Green
-    } else {
-        Write-Host "Could not find Oh My Posh themes directory. Manual installation may be required." -ForegroundColor Yellow
-        Write-Host "Copy 1_shell_blue_green.omp.json to: $env:POSH_THEMES_PATH" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "Oh My Posh not found in PATH. Theme will need manual installation." -ForegroundColor Yellow
+# Create themes directory
+$themesPath = "$env:USERPROFILE\.oh-my-posh\themes"
+if (-not (Test-Path $themesPath)) {
+    New-Item -ItemType Directory -Path $themesPath -Force | Out-Null
 }
+
+# Download official themes
+try {
+    Write-Host "Downloading official Oh My Posh themes..." -ForegroundColor Yellow
+    $themesZip = "$env:TEMP\omp-themes.zip"
+    Invoke-WebRequest -Uri "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -OutFile $themesZip
+    Expand-Archive -Path $themesZip -DestinationPath $themesPath -Force
+    Remove-Item $themesZip -Force
+    Write-Host "Official themes downloaded successfully!" -ForegroundColor Green
+} catch {
+    Write-Host "Warning: Could not download official themes. You may need to download them manually." -ForegroundColor Yellow
+}
+
+# Copy custom theme
+Copy-Item -Path "$scriptDir\1_shell_blue_green.omp.json" -Destination "$themesPath\1_shell_blue_green.omp.json" -Force
+Write-Host "Custom blue-green theme installed!" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "Step 7: Installing PSReadLine module..." -ForegroundColor Yellow

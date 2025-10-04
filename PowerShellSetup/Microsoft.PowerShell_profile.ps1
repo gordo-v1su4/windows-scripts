@@ -1,24 +1,31 @@
 # PowerShell Profile Configuration - Fix PSReadLine screen reader detection
 Import-Module PSReadLine -Force
 Set-PSReadLineOption -EditMode Windows
-Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-Set-PSReadLineOption -PredictionViewStyle ListView
 Set-PSReadLineOption -BellStyle None
 
+# Only set prediction options if PowerShell 7+ (these don't exist in Windows PowerShell 5)
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+    Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+    Set-PSReadLineOption -PredictionViewStyle ListView
+}
+
+# Set Oh My Posh themes path
+$env:POSH_THEMES_PATH = "$env:USERPROFILE\.oh-my-posh\themes"
+
 # Initialize Oh My Posh with theme options (uncomment the one you want to use)
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\mytheme.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\devious-diamonds.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\jonnychipz.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\jv_sitecorian.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\nu4a.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\night-owl.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\marcduiker.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\slim.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\cert.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\blueish.omp.json" | Invoke-Expression
-oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\atomic.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\1_shell.omp.json" | Invoke-Expression
-# oh-my-posh init pwsh --config "$($env:POSH_THEMES_PATH)\1_shell_blue_green.omp.json" | Invoke-Expression  # Custom blue-green version
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\mytheme.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\devious-diamonds.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\jonnychipz.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\jv_sitecorian.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\nu4a.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\night-owl.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\marcduiker.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\slim.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\cert.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\blueish.omp.json" | Invoke-Expression
+oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\atomic.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\1_shell.omp.json" | Invoke-Expression
+# oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\1_shell_blue_green.omp.json" | Invoke-Expression  # Custom blue-green version
 
 # Optional: suppress startup banner
 $env:POWERSHELL_DISABLE_CONSOLEHOSTSTARTUPMESSAGE = "1"
@@ -169,7 +176,7 @@ function ls {
 }
 
 # Alternative ll alias for the same functionality
-Set-Alias -Name ll -Value ls
+Set-Alias -Name ll -Value ls -Scope Global
 
 # =============================================================================
 # WARP TERMINAL SAFETY - Prevent accidental exits
@@ -195,5 +202,7 @@ function exit-force {
 }
 
 # Create an alias to clear without exiting
-Set-Alias -Name cls -Value Clear-Host -Force
-Set-Alias -Name clear -Value Clear-Host -Force
+if (Get-Alias -Name cls -ErrorAction SilentlyContinue) { Remove-Item Alias:cls -Force }
+Set-Alias -Name cls -Value Clear-Host -Scope Global
+if (Get-Alias -Name clear -ErrorAction SilentlyContinue) { Remove-Item Alias:clear -Force }
+Set-Alias -Name clear -Value Clear-Host -Scope Global
